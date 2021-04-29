@@ -447,6 +447,9 @@ Tetris.prototype = {
 
 			case 32:{this.shape.goBottom(matrix);this._update();}
 			break;
+
+			case 72: { this.holdShape(); }
+			break;
 		}
 	},
 	// Restart game
@@ -461,11 +464,29 @@ Tetris.prototype = {
 	},
 
 	// Fire a new random shape
-	_fireShape:function(){
-		this.shape = this.preparedShape||shapes.randomShape();
+	_fireShape:function(hold=null){
+		if (!hold) {
+			this.shape = this.preparedShape || shapes.randomShape();
+		} else {
+			this.shape = this.hold;
+		}
 		this.preparedShape = shapes.randomShape();
 		this._draw();
 		canvas.drawPreviewShape(this.preparedShape);
+
+
+	},
+
+	holdShape:function() {
+		if (!this.hold) {
+			this.hold = this.shape;
+			this._fireShape();
+		} else {
+			this.shape = this.hold;
+			this.hold = null;
+		}
+
+
 	},
 	
 	// Draw game data
@@ -675,6 +696,24 @@ function ShapeZR()
 	this.y = -2;
 	this.flag = 'ZR';
 }
+function ShapeC()
+{
+	var state1 = [ [1, 1, 0],
+				   [1, 0, 0], 
+				   [1, 1, 0] ];
+	var state2 = [ [1, 1, 1], 
+				   [1, 0, 1] ];
+	var state3 = [ [0, 1, 1],
+				   [0, 0, 1], 
+				   [0, 1, 1] ];
+	var state4 = [ [0, 0, 0],
+				   [1, 0, 1], 
+				   [1, 1, 1] ];
+	this.states = [state1, state2, state3, state4];
+	this.x = 4;
+	this.y = -2;
+	this.flag = 'C';				   
+}
 
 /**
 Is shape can move
@@ -701,9 +740,9 @@ var isShapeCanMove = function(shape,matrix,action){
 			return x>=0 && x<cols && matrix[y][x]==0;
 		}else if (action === 'down'){
 			y += 1;
-			return y<rows && matrix[y][x]==0;
+			return x >= 0 && y<rows && matrix[y][x]==0;
 		}else if (action === 'rotate'){
-			return y<rows && !matrix[y][x];
+			return x >= 0 && y<rows && !matrix[y][x];
 		}
 	};
 
@@ -726,7 +765,8 @@ ShapeO.prototype =
 ShapeI.prototype =
 ShapeT.prototype =
 ShapeZ.prototype =
-ShapeZR.prototype = {
+ShapeZR.prototype =
+ShapeC.prototype = {
 
 	init:function(){
 		this.color = COLORS[Math.floor(Math.random() * 7)];
@@ -848,11 +888,12 @@ ShapeZR.prototype = {
 */
 function randomShape()
 {
-	var result = Math.floor( Math.random() * 7 );
+	var result = Math.floor( Math.random() * 8 );
 	var shape;
 
 	switch(result)
 	{
+		// case 0: shape = new ShapeC();			break;
 		case 0: shape = new ShapeL();			break;
 		case 1: shape = new ShapeO();			break;
 		case 2: shape = new ShapeZ();			break;
@@ -860,6 +901,7 @@ function randomShape()
 		case 4: shape = new ShapeLR();			break;
 		case 5: shape = new ShapeZR();			break;
 		case 6: shape = new ShapeI();			break;
+		case 7: shape = new ShapeC();			break;
 	}
 	shape.init();
 	return shape;
